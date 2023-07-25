@@ -1,0 +1,26 @@
+- name: Deploy template service
+  hosts: web
+  become: true
+  vars:
+    docker_image_version: latest
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+
+    - name: Pull Docker image
+      docker_image:
+        name: myapp:{{ docker_image_version }}
+
+    - name: Run Docker container
+      docker_container:
+        name: myapp
+        image: myapp:{{ docker_image_version }}
+        ports:
+          - "80:80"
