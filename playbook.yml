@@ -1,26 +1,26 @@
-- name: Deploy template service
-  hosts: web
-  become: true
-  vars:
-    docker_image_version: latest
-  tasks:
-    - name: Install Docker
-      apt:
-        name: docker.io
-        state: present
+- name: Copy Docker image
+  docker_image:
+    name: myapp:latest
+    source: registry.example.com/myapp:latest
 
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
+- name: Write systemd unit file
+  template:
+    src: myapp.service.j2
+    dest: /etc/systemd/system/myapp.service
+    owner: root
+    group: root
+    mode: "0644"
 
-    - name: Pull Docker image
-      docker_image:
-        name: myapp:{{ docker_image_version }}
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
 
-    - name: Run Docker container
-      docker_container:
-        name: myapp
-        image: myapp:{{ docker_image_version }}
-        ports:
-          - "80:80"
+- name: Enable myapp service
+  systemd:
+    name: myapp
+    enabled: yes
+
+- name: Start myapp service
+  systemd:
+    name: myapp
+    state: started
